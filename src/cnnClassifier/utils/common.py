@@ -1,18 +1,18 @@
 import os
-from box.exception import BoxValueError
+from box.exceptions import BoxValueError
 import yaml
 from cnnClassifier import logger
 import json
 import joblib
 from ensure import ensure_annotations
-from box import ConfigBox
+from box.config_box import ConfigBox
 from pathlib import Path
 from typing import Any
 import base64
 
 # Ensures function inputs and outputs follow the specified type annotations.
 @ensure_annotations
-def read_ymal(path_to_yaml:Path) -> ConfigBox:
+def read_yaml(path_to_yaml:Path) -> ConfigBox:
     """_summary_
 
     Args:
@@ -24,13 +24,30 @@ def read_ymal(path_to_yaml:Path) -> ConfigBox:
 
     try:
         with open(path_to_yaml)as yaml_file:
-            content = yaml.safe.load(yaml_file)
+            content = yaml.safe_load(yaml_file)
             logger.info(f"yaml file: {path_to_yaml} loaded sucessfully")
             return ConfigBox(content)
     except BoxValueError:
-        return ValueError("yaml file is empty")
+        raise ValueError("yaml file is empty")
     except Exception as e:
         raise e
+
+@ensure_annotations
+def create_directories(path_to_directory:list,verbose=True):
+    """_summary_
+
+    Args:
+        path_to_directory (list): list of path of directories
+        verbose (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        _type_: _description_
+    """
+    for path in path_to_directory:
+        os.makedirs(path, exist_ok=True)
+        if verbose:
+            logger.info(f"create directory at: {path}")
+
 
 @ensure_annotations
 def save_json(path: Path, data:dict):
@@ -58,7 +75,7 @@ def load_json(path:Path)-> ConfigBox:
         content = json.load(f)
         
     logger.info(f"json file loaded sucessfully from : {path}")
-    return ConfigBox
+    return ConfigBox(content)
 
 @ensure_annotations
 def save_bin(data:Any, path: Path):
@@ -106,4 +123,4 @@ def decodeImage(imgstring,fileName):
 
 def encodeImageIntoBase64(croppedImagePath):
     with open(croppedImagePath,'rb')as f:
-        return base64.b64decode(f.read())
+        return base64.b64encode(f.read())
